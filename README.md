@@ -12,7 +12,16 @@ I also find myself wishing there was a simple to setup tool that did this, requi
 ## Moving Forward
 I'd like to ensure this script is platform agnostic and reliable, as I plan to use it not only with my Plex server, but other machines I need to backup as well.
 Flexibility is also a goal of this project, hopefully allowing various input/arguments to be used in the future.
+Below are some basic goals for the project (not in order of priority).
 
-## Known Issues
-The project is still in its very very early stages, and there are bound to be issues in the future but here are some currently known issues...
-- Upon the initial run (at least on MacOS), Python cannot locate part of the apscheduler module for some reason.
+- Drive statistic options
+  - Space available in existing partitions
+  - Read/Write speed test to set drives
+- Drive path options
+  - File/directory exclusion options
+  - Network drive support
+- Output/logging configuration options
+  - Verbose (output all logging info messages once added, along with statistics from the run)
+  - Run completion (success/fail, succinct summary)
+  - Save logs to external file
+  - Setting max size of log file files/directory
