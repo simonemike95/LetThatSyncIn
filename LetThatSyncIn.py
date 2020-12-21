@@ -50,14 +50,23 @@ For my use case, I just sync a bunch of Plex storage
 I was too lazy to set up a raid configuration, so I
 do things in a very stupid way for now.
 '''
-PLEX_DIR = ""
-PLEX_DIR_CLONE = ""
+PLEX_DIR = "G:"
+PLEX_DIR_CLONE = "F:"
 
-PLEX1_DIR = ""
-PLEX1_DIR_CLONE = ""
+PLEX1_DIR = "E:"
+PLEX1_DIR_CLONE = "J:"
 
-PLEX2_DIR = ""
-PLEX2_DIR_CLONE = ""
+PLEX2_DIR = "I:"
+PLEX2_DIR_CLONE = "H:"
+
+METADATA = "C:\\Users\\Mike\\AppData\\Local\\Plex Media Server"
+METADATA_CLONE = "D:\\Backups\\Plex-Metadata"
+
+def jobListener(event):
+    if event.exception:
+        print(f"Job failed, error: {event}")
+    else:
+        print("Job completed successfully.")
 
 def doSync(source, target):
     sync(source, target, 'sync', purge = True)
@@ -66,9 +75,16 @@ def doSync(source, target):
 Obviously changing the "hours" parameter will allow
 you to change the time between scheduled runs.
 For me, 12 hours is often enough.
+
+A job for each drive to be synced should be set up.
 '''
 scheduler = BlockingScheduler()
-scheduler.add_job(doSync, 'interval', hours=12)
+scheduler.add_job(doSync(PLEX_DIR, PLEX_DIR_CLONE), 'interval', hours=12)
+scheduler.add_job(doSync(PLEX1_DIR, PLEX1_DIR_CLONE), 'interval', hours=12)
+scheduler.add_job(doSync(PLEX2_DIR, PLEX2_DIR_CLONE), 'interval', hours=12)
+scheduler.add_job(doSync(METADATA, METADATA_CLONE), 'interval', hours=12)
+
+scheduler.add_listener(jobListener, BlockingScheduler.EVENT_JOB_EXECUTED | BlockingScheduler.EVENT_JOB_ERROR)
 
 print("Starting scheduler.")
 scheduler.start()
