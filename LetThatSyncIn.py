@@ -1,4 +1,6 @@
 import sys, os
+import asyncio
+import websockets
 
 '''
 I tried to make this script idiot proof by catching
@@ -18,20 +20,6 @@ except ImportError:
 except Exception as e:
     print("The following error occurred while attempting to import six:")
     print(e)
-
-'''
-FIXME: There seems to be some sort of error on the first time the
-script gets run, not sure why this results in an ImportError but
-the others don't...
-'''
-try:
-    from apscheduler.schedulers.blocking import BlockingScheduler
-except ImportError:
-    importPackage("apscheduler")
-    from apscheduler.schedulers.blocking import BlockingScheduler
-except Exception as e:
-        print("The following error occurred while attempting to import APScheduler:")
-        print(e)
 
 try:
     from dirsync import sync
@@ -62,29 +50,26 @@ PLEX2_DIR_CLONE = "H:"
 METADATA = "C:\\Users\\Mike\\AppData\\Local\\Plex Media Server"
 METADATA_CLONE = "D:\\Backups\\Plex-Metadata"
 
-def jobListener(event):
-    if event.exception:
-        print(f"Job failed, error: {event}")
-    else:
-        print("Job completed successfully.")
-
-def doSync(source, target):
+async def doSync(source, target):
+    # Still not sure if async is the answer here.
+    # May want to use pure threading when actually doing the sync
+    # so that there is no sleeping necessary while copying files
     sync(source, target, 'sync', purge = True)
 
-'''
-Obviously changing the "hours" parameter will allow
-you to change the time between scheduled runs.
-For me, 12 hours is often enough.
+async def copyJob(drive):
+    while 1:
+        # TODO: Add supporting class
+        source = drive.getSourcePath()
+        target = drive.getTargetPath()
+        sleep_timer = drive.getSleepTimer()
 
-A job for each drive to be synced should be set up.
-'''
-scheduler = BlockingScheduler()
-scheduler.add_job(doSync(PLEX_DIR, PLEX_DIR_CLONE), 'interval', hours=12)
-scheduler.add_job(doSync(PLEX1_DIR, PLEX1_DIR_CLONE), 'interval', hours=12)
-scheduler.add_job(doSync(PLEX2_DIR, PLEX2_DIR_CLONE), 'interval', hours=12)
-scheduler.add_job(doSync(METADATA, METADATA_CLONE), 'interval', hours=12)
+        await doSync(source, target)
+        await asyncio.sleep(1)
 
-scheduler.add_listener(jobListener, BlockingScheduler.EVENT_JOB_EXECUTED | BlockingScheduler.EVENT_JOB_ERROR)
+def main():
+    loop = asyncio.get_event_loop()
+    # TODO: Set up websockets for IPC
+    # TODO: Set up command handler
 
-print("Starting scheduler.")
-scheduler.start()
+if __name__ == '__main__':
+    main()
