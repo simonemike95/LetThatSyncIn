@@ -1,6 +1,9 @@
 import sys, os
 import asyncio
 import websockets
+import json
+
+import Drive
 
 '''
 I tried to make this script idiot proof by catching
@@ -12,14 +15,6 @@ def importPackage(packageName, cmd="pip3 install --user"):
     print(f"Couldn't import {packageName}, trying to install via pip3")
     print(f"Running command: {cmd} {packageName}")
     os.system(f"{cmd} {packageName}")
-
-try:
-    import six
-except ImportError:
-    importPackage("six", "pip3 install --ignore-installed --user")
-except Exception as e:
-    print("The following error occurred while attempting to import six:")
-    print(e)
 
 try:
     from dirsync import sync
@@ -50,6 +45,8 @@ PLEX2_DIR_CLONE = "H:"
 METADATA = "C:\\Users\\Mike\\AppData\\Local\\Plex Media Server"
 METADATA_CLONE = "D:\\Backups\\Plex-Metadata"
 
+drive_list = []
+
 async def doSync(source, target):
     # Still not sure if async is the answer here.
     # May want to use pure threading when actually doing the sync
@@ -66,10 +63,57 @@ async def copyJob(drive):
         await doSync(source, target)
         await asyncio.sleep(1)
 
+async def handleDriveCmd(cmd):
+    # TODO: Fill this out with various drive commands
+    request = cmd.get("request", None)
+
+    if request == "AddDrive":
+        # Add a new drive
+        # FIXME: Check for source, target, time, time units
+        # before creating a new Drive
+        # This is just an example for now
+        drive = Drive(PLEX_DIR, PLEX_DIR_CLONE, 1, 4)
+        asyncio.get_event_loop().create_task(copyJob(drive))
+        drive_list.append(drive)
+
+async def cmdHandler(websocket):
+    while 1:
+        try:
+            msg = websocket.receive()
+        except websockets.exceptions.ConnectionClosedError:
+            print("Client disconnected unexpectedly")
+        except websocket.exceptions.ConnectionClosedOK:
+            print("Client disconnected OK")
+        except Exception as e:
+            print(f"Got an exception: {e}")
+
+        cmd = json.loads(msg)
+        request = cmd.get("request", None)
+
+        if "Drive" in request:
+            await handleDriveCmd()
+
+        # We don't want to hammer the CPU unnecessarily
+        await asyncio.sleep(.5)
+
 def main():
     loop = asyncio.get_event_loop()
+    cmd_server = websockets.serve(cmdHandler, "", 1800)
+    loop.run_until_complete(cmd_server)
+    
     # TODO: Set up websockets for IPC
     # TODO: Set up command handler
+        # Ideally, once websockets are setup for IPC, there will be some sort of
+        # command/response structure in order to add/remove drives as well as
+        # edit existing paths, timers, etc.
+    # TODO: Set up config file to save and load previous configurations
+    # TODO: Create config file helper to make new config files
+
+
+    drive1 = Drive(PLEX_DIR, PLEX_DIR_CLONE, 1, 4)
+    drive1_task = loop.create_task(copyJob(drive1))
+
+    loop.run_forever()
 
 if __name__ == '__main__':
     main()
