@@ -109,10 +109,6 @@ def main():
     # TODO: Set up config file to save and load previous configurations
     # TODO: Create config file helper to make new config files
 
-
-    drive1 = Drive(PLEX_DIR, PLEX_DIR_CLONE, 1, 4)
-    drive1_task = loop.create_task(copyJob(drive1))
-
     loop.run_forever()
 
 if __name__ == '__main__':

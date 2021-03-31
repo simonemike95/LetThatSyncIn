@@ -3,6 +3,10 @@ A basic Python script to schedule the sync of drives/folders regardless of platf
 
 
 ## Commands and Responses
+
+### Websocket
+The websocket used for commands and responses will be run at:
+`localhost:1800`
 ### List Drives
 *Example: Input*
 ```
@@ -76,6 +80,7 @@ The current objectives are:
 - Necessary websocket(s) set up
 - Various Drive commands outlined
 - Command handler written according to documentation
+- User configurable websocket address and port (low priority)
 - Config file (low priority)
 - Config file creator tool (very low priority)
 
